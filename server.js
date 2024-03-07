@@ -3,11 +3,12 @@ const mongoose = require('mongoose')
 const Document = require('./Document')
 
 
-mongoose.connect('mongodb+srv://sanketbanerjee2004:202004@cluster0.rl8bjob.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+mongoose.connect('mongodb+srv://sanketbanerjee:202004@cluster0.g1uple2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
 
 const io = require('socket.io')(3001, {
     cors: {
-        origin: 'http://localhost:3000',
+        // origin: 'http://localhost:3000',
+        origin: 'https://docsme.netlify.app',
         methods: ['GET', 'POST']
     },
 })
