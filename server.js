@@ -37,8 +37,8 @@ const defaultValue = "";
 io.on("connection", (socket) => {
     console.log("Connected");
 
-    socket.on('get-document', async (documentId) => {
-        const document = await findOrCreateDocument(documentId);
+    socket.on('get-document', async (documentId, username, filename) => {
+        const document = await findOrCreateDocument(documentId, username, filename);
         socket.join(documentId);
         socket.emit("load-document", document.data);
 
@@ -46,19 +46,32 @@ io.on("connection", (socket) => {
             socket.broadcast.to(documentId).emit("receive-changes", delta);
         });
 
-        socket.on("save-document", async (data) => {
-            await Document.findByIdAndUpdate(documentId, { data });
+        socket.on("save-document", async (data, createdBy, filename) => {
+            await Document.findByIdAndUpdate(documentId, { data, createdBy, filename });
         });
     });
+
 });
 
-async function findOrCreateDocument(id) {
+async function findOrCreateDocument(id, username, filename) {
     if (id == null) return;
 
     const document = await Document.findById(id);
     if (document) return document;
-    return await Document.create({ _id: id, data: defaultValue });
+    return await Document.create({ _id: id, data: defaultValue, username, filename });
 }
+
+
+// Add route to display all documents
+app.get('/documents', async (req, res) => {
+    try {
+        const documents = await Document.find();
+        res.json(documents);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 // Start the server
 const PORT = process.env.PORT || 3001;
