@@ -42,10 +42,24 @@ const io = new Server(server, {
 });
 
 const defaultValue = "";
+let connectedUsers = 0;
+
+const updateConnectedUsers = () => {
+  io.emit("user-count", connectedUsers);
+};
 
 // Socket.io connection
 io.on("connection", (socket) => {
-  console.log("Socket Connected");
+  connectedUsers++;
+  console.log(`Socket Connected. Users connected: ${connectedUsers}`);
+  updateConnectedUsers();
+
+
+  socket.on("disconnect", () => {
+    connectedUsers--;
+    console.log(`Socket Disconnected. Users connected: ${connectedUsers}`);
+    updateConnectedUsers();
+  });
 
   socket.on("get-document", async (documentId) => {
     const document = await Document.findById(documentId);
@@ -63,19 +77,19 @@ io.on("connection", (socket) => {
 });
 
 // Endpoint to create or find a document
-app.post('/document', async (req, res) => {
+app.post("/document", async (req, res) => {
   try {
     const { id, username, filename } = req.body;
 
     if (!id || !username || !filename) {
-      return res.status(400).send('id, username, and filename are required');
+      return res.status(400).send("id, username, and filename are required");
     }
 
     const document = await findOrCreateDocument(id, username, filename);
     res.status(200).json(document);
   } catch (error) {
-    console.error('Error creating or finding document:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error creating or finding document:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
@@ -98,20 +112,19 @@ async function findOrCreateDocument(id, username, filename) {
 }
 
 // Endpoint to display document details
-app.get('/document/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-      const document = await Document.findById(id);
-      if (!document) {
-        return res.status(404).json({ message: "Document not found" });
-      }
-      res.status(200).json(document);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal server error" });
+app.get("/document/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const document = await Document.findById(id);
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
     }
-  });
-  
+    res.status(200).json(document);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 // Endpoint to display all documents
 app.get("/documents", async (req, res) => {
